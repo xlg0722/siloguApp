@@ -15,6 +15,11 @@
       "sha256": "0271224730eb66e5d3f12f744050ea62bdebd5eed3458fb89d8ff90d857899f6"
     },
     {
+      "target": "resources/网站/.github/workflows/sync-releases.yml",
+      "url": "https://raw.githubusercontent.com/xlg0722/siloguWebsite/main/.github/workflows/sync-releases.yml",
+      "sha256": "aabecd9ac7526e715e05cf126a7778ddeefeadfc8aa036510f2998a2a8635140"
+    },
+    {
       "target": "resources/网站/assets/favicon.png",
       "url": "https://raw.githubusercontent.com/xlg0722/siloguWebsite/main/assets/favicon.png",
       "sha256": "dfafe325fe80b9ca0e27c58f12de8606b094e072e3ba601cf0d5a227c77d949b"
@@ -40,19 +45,29 @@
       "sha256": "d5b9a6ba654a183e6323d94d2bd3bc4067c511a6a84978a6f946b2fc0dea1c6f"
     },
     {
+      "target": "resources/网站/releases.json",
+      "url": "https://raw.githubusercontent.com/xlg0722/siloguWebsite/main/releases.json",
+      "sha256": "35e02d86fc683eb14a857f4a105a3391a556ec7cb5acdee10a91f3c38e7bf933"
+    },
+    {
       "target": "resources/网站/script.js",
       "url": "https://raw.githubusercontent.com/xlg0722/siloguWebsite/main/script.js",
       "sha256": "11d3c70af35df74a033552c5c64585fa40b8e55d4adb6e51a11a332adb77ab90"
     },
     {
+      "target": "resources/网站/scripts/sync-releases.js",
+      "url": "https://raw.githubusercontent.com/xlg0722/siloguWebsite/main/scripts/sync-releases.js",
+      "sha256": "a3dbdba3432793c368fa96328e50c078564581eea754c6da06ae29e23ee78c97"
+    },
+    {
       "target": "resources/网站/store-data.js",
       "url": "https://raw.githubusercontent.com/xlg0722/siloguWebsite/main/store-data.js",
-      "sha256": "e0489ef5261c7d42795f42109f0907e0af0c1e5fbea878513d9189a3584002cd"
+      "sha256": "ad8424c4d93ca5db90af098b837b47b515bd72b83a3a5a8645d44e168bf77b12"
     },
     {
       "target": "resources/网站/store.js",
       "url": "https://raw.githubusercontent.com/xlg0722/siloguWebsite/main/store.js",
-      "sha256": "b5a972c4a5f51474750e7293ad71c4dd68368d9729db87ad69ec910a7ff3b4f5"
+      "sha256": "21e2832bb9b69f32fea32cac90da08ba6abbd5b6494b1240d69b1516ea9e7cdb"
     },
     {
       "target": "resources/网站/styles.css",
