@@ -186,7 +186,7 @@ function openInstaller(manifest) {
 function checkForUpdates(win, retried) {
     if (!app.isPackaged) return;
 
-    const current = app.getVersion();
+    const current = installedVersion();
     logUpdate('检查更新：当前版本 v' + current);
 
     fetchJsonAny(manifestUrls()).then(function (manifest) {
@@ -244,6 +244,7 @@ function promptUpdate(win, manifest, plan) {
 
         applyUpdatePlan(plan).then(function (res) {
             if (!res.changed) throw new Error('没有文件更新成功');
+            if (!res.failed.length) markInstalledVersion(manifest.version);
 
             dialog.showMessageBox(win, {
                 type: res.failed.length ? 'warning' : 'info',
@@ -314,6 +315,24 @@ function getDownloadDir() {
     return cfg.downloadDir || defaultDownloadDir();
 }
 
+// 增量更新不会改 exe 里的版本号，更新后把版本记在配置里，
+// 否则每次启动都会重复提示同一个新版本
+function installedVersion() {
+    const cfg = readConfig();
+    const base = app.getVersion();
+    const baseArr = parseVersion(base);
+    const storedArr = parseVersion(cfg.installedVersion);
+    if (baseArr && storedArr && compareVersions(storedArr, baseArr) > 0) return cfg.installedVersion;
+    return base;
+}
+
+function markInstalledVersion(version) {
+    if (!version) return;
+    const cfg = readConfig();
+    cfg.installedVersion = version;
+    writeConfig(cfg);
+}
+
 function createWindow() {
     const win = new BrowserWindow({
         width: 1280,
@@ -363,24 +382,24 @@ app.whenReady().then(function () {
         return getDownloadDir();
     });
 
-    // 读取应用版本号，供设置页展示
+    // 读取应用版本号，供设置页展示（含增量更新后的版本）
     ipcMain.handle('get-app-version', function () {
-        return app.getVersion();
+        return installedVersion();
     });
 
     // 设置页「检查更新」：读清单，返回是否需要更新、要替换几个文件
     ipcMain.handle('check-updates', async function () {
         if (!app.isPackaged) {
-            return { current: app.getVersion(), latest: app.getVersion(), hasUpdate: false, fileCount: 0, full: false, installer: '' };
+            return { current: installedVersion(), latest: installedVersion(), hasUpdate: false, fileCount: 0, full: false, installer: '' };
         }
         const manifest = await fetchJsonAny(manifestUrls());
         const plan = buildUpdatePlan(manifest);
         const latest = (manifest && manifest.version) || '';
         const latestArr = parseVersion(latest);
-        const localArr = parseVersion(app.getVersion());
+        const localArr = parseVersion(installedVersion());
         const hasUpdate = !!(latestArr && localArr && compareVersions(latestArr, localArr) > 0);
         return {
-            current: app.getVersion(),
+            current: installedVersion(),
             latest: latest,
             hasUpdate: hasUpdate,
             fileCount: plan.files.length,
@@ -398,6 +417,7 @@ app.whenReady().then(function () {
             return { ok: false, full: true, changed: 0, failed: [], installer: manifest.installer || '' };
         }
         const res = await applyUpdatePlan(plan);
+        if (!res.failed.length && res.changed) markInstalledVersion(manifest.version);
         return {
             ok: !res.failed.length && res.changed > 0,
             full: false,

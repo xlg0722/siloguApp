@@ -39,7 +39,8 @@ function walk(dir, prefix) {
 const files = [];
 
 // 应用自身文件：打包后在 resources/app/ 下
-['main.js', 'preload.js', 'package.json'].forEach(function (name) {
+// package.json 会被 electron-builder 裁剪过，不能参与哈希比对，所以不列进来
+['main.js', 'preload.js'].forEach(function (name) {
     const full = path.join(appRoot, name);
     if (!fs.existsSync(full)) return;
     files.push({

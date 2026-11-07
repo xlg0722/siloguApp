@@ -7,17 +7,12 @@
     {
       "target": "resources/app/main.js",
       "url": "https://raw.githubusercontent.com/xlg0722/siloguApp/main/main.js",
-      "sha256": "4a50b06ce0c89302c803da5b345aea05adceafd283bf0433e11115364f175f69"
+      "sha256": "4678f92bccc494fe951992f7e971011e0751641a15996d7fc84e9eed3c55aa63"
     },
     {
       "target": "resources/app/preload.js",
       "url": "https://raw.githubusercontent.com/xlg0722/siloguApp/main/preload.js",
       "sha256": "0271224730eb66e5d3f12f744050ea62bdebd5eed3458fb89d8ff90d857899f6"
-    },
-    {
-      "target": "resources/app/package.json",
-      "url": "https://raw.githubusercontent.com/xlg0722/siloguApp/main/package.json",
-      "sha256": "79c6f30f536669d1be5d65a85e91fc125f2ed03804d84c3c3fb910b6bc101b33"
     },
     {
       "target": "resources/网站/assets/favicon.png",

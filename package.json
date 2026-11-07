@@ -6,7 +6,8 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --win --dir && node scripts/build-update-manifest.js"
+    "dist": "electron-builder --win --dir && node scripts/build-update-manifest.js",
+    "manifest": "node scripts/build-update-manifest.js"
   },
   "devDependencies": {
     "electron": "^33.0.0",
