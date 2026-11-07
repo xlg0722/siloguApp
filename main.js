@@ -334,6 +334,10 @@ function markInstalledVersion(version) {
 }
 
 function createWindow() {
+    const iconPath = app.isPackaged
+        ? path.join(process.resourcesPath, 'icon.ico')
+        : path.join(__dirname, 'assets', 'icon.ico');
+
     const win = new BrowserWindow({
         width: 1280,
         height: 820,
@@ -341,6 +345,7 @@ function createWindow() {
         minHeight: 640,
         backgroundColor: '#0a0e1a',
         title: '小龙果',
+        icon: iconPath,
         autoHideMenuBar: true,
         show: false,
         webPreferences: {

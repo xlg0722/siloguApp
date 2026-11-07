@@ -15,8 +15,8 @@ const pkg = JSON.parse(fs.readFileSync(path.join(appRoot, 'package.json'), 'utf8
 // 两个 GitHub 仓库的 raw 地址（jsDelivr 镜像由应用端自动尝试）
 const APP_RAW = 'https://raw.githubusercontent.com/xlg0722/siloguApp/main/';
 const SITE_RAW = 'https://raw.githubusercontent.com/xlg0722/siloguWebsite/main/';
-const INSTALLER = 'https://gitee.com/silogu/silogu-app/releases/download/v' +
-    pkg.version + '/siloguAppSetup.exe';
+// 需要整包更新时直接打开发行版页面（安装包名字由 Gitee 发行版决定，不写死）
+const INSTALLER = 'https://gitee.com/silogu/silogu-app/releases';
 
 function sha256(file) {
     return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');

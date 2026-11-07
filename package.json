@@ -1,6 +1,6 @@
 {
   "name": "silogu-app",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "小龙果桌面应用（加载共享网站 UI，提供原生下载与增量更新）",
   "author": "xlg0722",
   "main": "main.js",
@@ -30,11 +30,15 @@
         "from": "../网站",
         "to": "网站",
         "filter": ["**/*", "!.github/**", "!scripts/**"]
+      },
+      {
+        "from": "assets/icon.ico",
+        "to": "icon.ico"
       }
     ],
     "win": {
       "target": "dir",
-      "signAndEditExecutable": false
+      "icon": "assets/icon.ico"
     }
   }
 }
