@@ -1,12 +1,12 @@
 {
   "name": "silogu-app",
   "version": "1.3.0",
-  "description": "小龙果桌面应用（加载共享网站 UI，提供原生下载）",
-  "main": "main.js",
+  "description": "小龙果桌面应用（加载共享网站 UI，提供原生下载与增量更新）",
   "author": "xlg0722",
+  "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --win portable"
+    "dist": "electron-builder --win --dir && node scripts/build-update-manifest.js"
   },
   "devDependencies": {
     "electron": "^33.0.0",
@@ -15,6 +15,7 @@
   "build": {
     "appId": "com.silogu.app",
     "productName": "小龙果",
+    "asar": false,
     "directories": {
       "output": "dist"
     },
@@ -27,11 +28,8 @@
       { "from": "../网站", "to": "网站" }
     ],
     "win": {
-      "target": "portable",
+      "target": "dir",
       "signAndEditExecutable": false
-    },
-    "portable": {
-      "artifactName": "siloguApp.exe"
     }
   }
 }

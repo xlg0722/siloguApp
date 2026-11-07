@@ -23,6 +23,21 @@ contextBridge.exposeInMainWorld('desktopAPI', {
         return ipcRenderer.invoke('choose-download-dir');
     },
 
+    // 检查更新：返回 { current, latest, hasUpdate, fileCount, full, installer }
+    checkUpdates: function () {
+        return ipcRenderer.invoke('check-updates');
+    },
+
+    // 执行增量更新（只下载修改过的文件并替换）
+    applyUpdate: function () {
+        return ipcRenderer.invoke('apply-update');
+    },
+
+    // 更新完成后重启应用
+    restartApp: function () {
+        return ipcRenderer.invoke('restart-app');
+    },
+
     // 下载文件到设定目录（返回 Promise）
     downloadFile: function (payload) {
         return ipcRenderer.invoke('download-file', payload);
