@@ -183,6 +183,11 @@ app.whenReady().then(function () {
         return getDownloadDir();
     });
 
+    // 读取应用版本号，供设置页展示
+    ipcMain.handle('get-app-version', function () {
+        return app.getVersion();
+    });
+
     // 弹出系统目录选择框
     ipcMain.handle('choose-download-dir', async function (event) {
         const win = BrowserWindow.fromWebContents(event.sender);

@@ -8,6 +8,11 @@ contextBridge.exposeInMainWorld('desktopAPI', {
     // 标识当前运行在桌面应用里（网页端这个对象不存在）
     isDesktop: true,
 
+    // 读取应用版本号（如 1.0.1）
+    getAppVersion: function () {
+        return ipcRenderer.invoke('get-app-version');
+    },
+
     // 读取当前下载目录
     getDownloadDir: function () {
         return ipcRenderer.invoke('get-download-dir');
