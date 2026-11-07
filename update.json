@@ -37,7 +37,7 @@
     {
       "target": "resources/网站/index.html",
       "url": "https://raw.githubusercontent.com/xlg0722/siloguWebsite/main/index.html",
-      "sha256": "6ab2f5a620d278c6a7a1fa028e9a3b714b4c7701f2ce5a2b9081270daec83421"
+      "sha256": "d5b9a6ba654a183e6323d94d2bd3bc4067c511a6a84978a6f946b2fc0dea1c6f"
     },
     {
       "target": "resources/网站/script.js",
@@ -47,17 +47,17 @@
     {
       "target": "resources/网站/store-data.js",
       "url": "https://raw.githubusercontent.com/xlg0722/siloguWebsite/main/store-data.js",
-      "sha256": "454f32c9596dfdbc382610013014e7944afd791570f003c49efc0c40e520bf09"
+      "sha256": "e0489ef5261c7d42795f42109f0907e0af0c1e5fbea878513d9189a3584002cd"
     },
     {
       "target": "resources/网站/store.js",
       "url": "https://raw.githubusercontent.com/xlg0722/siloguWebsite/main/store.js",
-      "sha256": "20f1aeed799739c381d2f1ad628cf714426bb64fed5c121965284965e6cbe6aa"
+      "sha256": "b5a972c4a5f51474750e7293ad71c4dd68368d9729db87ad69ec910a7ff3b4f5"
     },
     {
       "target": "resources/网站/styles.css",
       "url": "https://raw.githubusercontent.com/xlg0722/siloguWebsite/main/styles.css",
-      "sha256": "da97fbbeaebbfa53f13cd3559cef03caf48e736013050447a09d99db56b5ea3e"
+      "sha256": "ceecc97a8e5a294129a952ba5c5ae0cb4503254428b5aefb24ded78d6afcb679"
     },
     {
       "target": "resources/网站/supabase-config.js",
