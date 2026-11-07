@@ -5,6 +5,104 @@
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const https = require('https');
+
+// Gitee 发行版接口：启动时用来检测是否有新版本
+const RELEASES_API = 'https://gitee.com/api/v5/repos/silogu/silogu-app/releases?page=1&per_page=10';
+const DOWNLOAD_BASE = 'https://gitee.com/silogu/silogu-app/releases/download/';
+
+// 简易 JSON 请求（跟随重定向、8 秒超时）
+function fetchJson(url) {
+    return new Promise(function (resolve, reject) {
+        const req = https.get(url, {
+            headers: { 'User-Agent': 'silogu-app', Accept: 'application/json' }
+        }, function (res) {
+            // Gitee 偶尔会重定向，跟着走一次
+            if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+                res.resume();
+                resolve(fetchJson(res.headers.location));
+                return;
+            }
+            if (res.statusCode !== 200) {
+                res.resume();
+                reject(new Error('HTTP ' + res.statusCode));
+                return;
+            }
+            let body = '';
+            res.setEncoding('utf8');
+            res.on('data', function (chunk) { body += chunk; });
+            res.on('end', function () {
+                try {
+                    resolve(JSON.parse(body));
+                } catch (err) {
+                    reject(err);
+                }
+            });
+        });
+        req.on('error', reject);
+        req.setTimeout(8000, function () {
+            req.destroy(new Error('timeout'));
+        });
+    });
+}
+
+// 把 v1.0.1 这样的标签解析成 [1, 0, 1]
+function parseVersion(text) {
+    const match = String(text || '').match(/v?(\d+)\.(\d+)\.(\d+)/i);
+    if (!match) return null;
+    return [Number(match[1]), Number(match[2]), Number(match[3])];
+}
+
+function compareVersions(a, b) {
+    for (let i = 0; i < 3; i++) {
+        if (a[i] !== b[i]) return a[i] > b[i] ? 1 : -1;
+    }
+    return 0;
+}
+
+// 启动后检查更新：有新版本就弹窗，点「立即下载」交给系统浏览器
+function checkForUpdates(win) {
+    fetchJson(RELEASES_API).then(function (list) {
+        if (!Array.isArray(list) || !list.length) return;
+
+        let latest = null;
+        list.forEach(function (rel) {
+            const version = parseVersion(rel && rel.tag_name);
+            if (!version) return;
+            if (!latest || compareVersions(version, latest.version) > 0) {
+                latest = { version: version, tag: rel.tag_name, notes: rel.body || '', assets: rel.assets || [] };
+            }
+        });
+        if (!latest) return;
+
+        const current = parseVersion(app.getVersion());
+        if (!current || compareVersions(latest.version, current) <= 0) return;
+
+        const exeAsset = latest.assets.filter(function (item) {
+            return item && item.name && /\.exe$/i.test(item.name);
+        })[0];
+        const downloadUrl = (exeAsset && (exeAsset.browser_download_url || exeAsset.download_url)) ||
+            DOWNLOAD_BASE + latest.tag + '/siloguApp.exe';
+
+        dialog.showMessageBox(win, {
+            type: 'info',
+            title: '发现新版本',
+            message: '小龙果 ' + latest.tag + ' 已发布',
+            detail: '当前版本 v' + app.getVersion() + '，最新版本 ' + latest.tag +
+                (latest.notes ? '\n\n' + String(latest.notes).slice(0, 300) : ''),
+            buttons: ['立即下载', '稍后'],
+            defaultId: 0,
+            cancelId: 1,
+            noLink: true
+        }).then(function (result) {
+            if (result.response === 0) {
+                shell.openExternal(downloadUrl);
+            }
+        });
+    }).catch(function () {
+        // 离线或接口异常时静默，不打扰启动
+    });
+}
 
 // 下载目录配置保存在 userData（随系统用户走，不污染项目目录）
 function configPath() {
@@ -64,6 +162,10 @@ function createWindow() {
     // 窗口加载完成后再显示，避免白屏闪烁
     win.once('ready-to-show', function () {
         win.show();
+        // 稍等再检测更新，避免和首屏渲染抢资源
+        setTimeout(function () {
+            checkForUpdates(win);
+        }, 2000);
     });
 
     // 外部链接交给系统浏览器，不在应用内跳转
