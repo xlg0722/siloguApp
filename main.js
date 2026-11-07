@@ -2,48 +2,41 @@
  * Electron 主进程：创建窗口，加载共享的「网站」UI，
  * 提供下载目录管理 + 原生下载（含进度回传）。
  */
-const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, net } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const https = require('https');
 
 // Gitee 发行版接口：启动时用来检测是否有新版本
 const RELEASES_API = 'https://gitee.com/api/v5/repos/silogu/silogu-app/releases?page=1&per_page=10';
 const DOWNLOAD_BASE = 'https://gitee.com/silogu/silogu-app/releases/download/';
 
-// 简易 JSON 请求（跟随重定向、8 秒超时）
-function fetchJson(url) {
-    return new Promise(function (resolve, reject) {
-        const req = https.get(url, {
-            headers: { 'User-Agent': 'silogu-app', Accept: 'application/json' }
-        }, function (res) {
-            // Gitee 偶尔会重定向，跟着走一次
-            if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-                res.resume();
-                resolve(fetchJson(res.headers.location));
-                return;
-            }
-            if (res.statusCode !== 200) {
-                res.resume();
-                reject(new Error('HTTP ' + res.statusCode));
-                return;
-            }
-            let body = '';
-            res.setEncoding('utf8');
-            res.on('data', function (chunk) { body += chunk; });
-            res.on('end', function () {
-                try {
-                    resolve(JSON.parse(body));
-                } catch (err) {
-                    reject(err);
-                }
-            });
+// 更新日志：写进 userData/update.log，方便排查「检测不到新版本」
+function updateLogPath() {
+    return path.join(app.getPath('userData'), 'update.log');
+}
+
+function logUpdate(text) {
+    try {
+        fs.appendFileSync(updateLogPath(), new Date().toISOString() + ' ' + text + '\n');
+    } catch (err) {
+        // 写日志失败不影响主流程
+    }
+}
+
+// JSON 请求：走 Chromium 网络栈（自动使用系统代理），12 秒超时
+async function fetchJson(url) {
+    const controller = new AbortController();
+    const timer = setTimeout(function () { controller.abort(); }, 12000);
+    try {
+        const res = await net.fetch(url, {
+            headers: { Accept: 'application/json' },
+            signal: controller.signal
         });
-        req.on('error', reject);
-        req.setTimeout(8000, function () {
-            req.destroy(new Error('timeout'));
-        });
-    });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return await res.json();
+    } finally {
+        clearTimeout(timer);
+    }
 }
 
 // 把 v1.0.1 这样的标签解析成 [1, 0, 1]
@@ -61,10 +54,18 @@ function compareVersions(a, b) {
 }
 
 // 启动后检查更新：有新版本就弹窗，点「立即下载」交给系统浏览器
-function checkForUpdates(win) {
-    fetchJson(RELEASES_API).then(function (list) {
-        if (!Array.isArray(list) || !list.length) return;
+// retried 用于标记是否已经重试过，失败 20 秒后只自动再试一次
+function checkForUpdates(win, retried) {
+    const current = parseVersion(app.getVersion());
+    logUpdate('检查更新：当前版本 v' + app.getVersion());
 
+    fetchJson(RELEASES_API).then(function (list) {
+        if (!Array.isArray(list) || !list.length) {
+            logUpdate('检查更新：接口没有返回发行版');
+            return;
+        }
+
+        // 接口按创建时间排序，必须按版本号取最大，否则会拿到旧版本
         let latest = null;
         list.forEach(function (rel) {
             const version = parseVersion(rel && rel.tag_name);
@@ -73,10 +74,17 @@ function checkForUpdates(win) {
                 latest = { version: version, tag: rel.tag_name, notes: rel.body || '', assets: rel.assets || [] };
             }
         });
-        if (!latest) return;
+        if (!latest) {
+            logUpdate('检查更新：发行版里没有可识别的版本号');
+            return;
+        }
+        logUpdate('检查更新：最新版本 ' + latest.tag);
 
-        const current = parseVersion(app.getVersion());
-        if (!current || compareVersions(latest.version, current) <= 0) return;
+        if (!current) return;
+        if (compareVersions(latest.version, current) <= 0) {
+            logUpdate('检查更新：已是最新版本');
+            return;
+        }
 
         const exeAsset = latest.assets.filter(function (item) {
             return item && item.name && /\.exe$/i.test(item.name);
@@ -84,6 +92,7 @@ function checkForUpdates(win) {
         const downloadUrl = (exeAsset && (exeAsset.browser_download_url || exeAsset.download_url)) ||
             DOWNLOAD_BASE + latest.tag + '/siloguApp.exe';
 
+        logUpdate('检查更新：发现新版本，弹窗提示');
         dialog.showMessageBox(win, {
             type: 'info',
             title: '发现新版本',
@@ -99,8 +108,14 @@ function checkForUpdates(win) {
                 shell.openExternal(downloadUrl);
             }
         });
-    }).catch(function () {
-        // 离线或接口异常时静默，不打扰启动
+    }).catch(function (err) {
+        logUpdate('检查更新失败：' + (err && err.message ? err.message : String(err)));
+        // 网络抖动或代理尚未就绪时，20 秒后再试一次
+        if (!retried) {
+            setTimeout(function () {
+                checkForUpdates(win, true);
+            }, 20000);
+        }
     });
 }
 

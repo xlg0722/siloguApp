@@ -1,6 +1,6 @@
 {
   "name": "silogu-app",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "小龙果桌面应用（加载共享网站 UI，提供原生下载）",
   "main": "main.js",
   "author": "xlg0722",
