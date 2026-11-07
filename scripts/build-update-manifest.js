@@ -51,7 +51,9 @@ const files = [];
 });
 
 // 网站文件：打包后在 resources/网站/ 下
+// 仓库里的 .github 和 scripts 不会打进安装包，清单里也跳过
 walk(siteRoot, '').forEach(function (rel) {
+    if (/^\./.test(rel) || /^scripts[\\/]/.test(rel) || rel === 'README.md') return;
     const full = path.join(siteRoot, rel);
     files.push({
         target: 'resources/网站/' + rel,

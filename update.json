@@ -15,11 +15,6 @@
       "sha256": "0271224730eb66e5d3f12f744050ea62bdebd5eed3458fb89d8ff90d857899f6"
     },
     {
-      "target": "resources/网站/.github/workflows/sync-releases.yml",
-      "url": "https://raw.githubusercontent.com/xlg0722/siloguWebsite/main/.github/workflows/sync-releases.yml",
-      "sha256": "aabecd9ac7526e715e05cf126a7778ddeefeadfc8aa036510f2998a2a8635140"
-    },
-    {
       "target": "resources/网站/assets/favicon.png",
       "url": "https://raw.githubusercontent.com/xlg0722/siloguWebsite/main/assets/favicon.png",
       "sha256": "dfafe325fe80b9ca0e27c58f12de8606b094e072e3ba601cf0d5a227c77d949b"
@@ -55,11 +50,6 @@
       "sha256": "11d3c70af35df74a033552c5c64585fa40b8e55d4adb6e51a11a332adb77ab90"
     },
     {
-      "target": "resources/网站/scripts/sync-releases.js",
-      "url": "https://raw.githubusercontent.com/xlg0722/siloguWebsite/main/scripts/sync-releases.js",
-      "sha256": "a3dbdba3432793c368fa96328e50c078564581eea754c6da06ae29e23ee78c97"
-    },
-    {
       "target": "resources/网站/store-data.js",
       "url": "https://raw.githubusercontent.com/xlg0722/siloguWebsite/main/store-data.js",
       "sha256": "ad8424c4d93ca5db90af098b837b47b515bd72b83a3a5a8645d44e168bf77b12"
@@ -67,7 +57,7 @@
     {
       "target": "resources/网站/store.js",
       "url": "https://raw.githubusercontent.com/xlg0722/siloguWebsite/main/store.js",
-      "sha256": "21e2832bb9b69f32fea32cac90da08ba6abbd5b6494b1240d69b1516ea9e7cdb"
+      "sha256": "da941fd0c64b5ae03e3711746ece48c3a532b76c79ee60639dc399fa9b887aec"
     },
     {
       "target": "resources/网站/styles.css",

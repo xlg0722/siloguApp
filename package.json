@@ -26,7 +26,11 @@
       "package.json"
     ],
     "extraResources": [
-      { "from": "../网站", "to": "网站" }
+      {
+        "from": "../网站",
+        "to": "网站",
+        "filter": ["**/*", "!.github/**", "!scripts/**"]
+      }
     ],
     "win": {
       "target": "dir",
