@@ -1,1 +1,37 @@
-{"output":"1\t{\n2\t  \"name\": \"silogu-app\",\n3\t  \"version\": \"1.0.0\",\n4\t  \"description\": \"小龙果桌面应用（加载共享网站 UI，提供原生下载）\",\n5\t  \"main\": \"main.js\",\n6\t  \"author\": \"xlg0722\",\n7\t  \"scripts\": {\n8\t    \"start\": \"electron .\",\n9\t    \"dist\": \"electron-builder --win portable\"\n10\t  },\n11\t  \"devDependencies\": {\n12\t    \"electron\": \"^33.0.0\",\n13\t    \"electron-builder\": \"^25.1.8\"\n14\t  },\n15\t  \"build\": {\n16\t    \"appId\": \"com.silogu.app\",\n17\t    \"productName\": \"小龙果\",\n18\t    \"directories\": {\n19\t      \"output\": \"dist\"\n20\t    },\n21\t    \"files\": [\n22\t      \"main.js\",\n23\t      \"preload.js\",\n24\t      \"package.json\"\n25\t    ],\n26\t    \"extraResources\": [\n27\t      { \"from\": \"../网站\", \"to\": \"网站\" }\n28\t    ],\n29\t    \"win\": {\n30\t      \"target\": \"portable\",\n31\t      \"signAndEditExecutable\": false\n32\t    },\n33\t    \"portable\": {\n34\t      \"artifactName\": \"siloguApp.exe\"\n35\t    }\n36\t  }\n37\t}"}
+{
+  "name": "silogu-app",
+  "version": "1.0.0",
+  "description": "小龙果桌面应用（加载共享网站 UI，提供原生下载）",
+  "main": "main.js",
+  "author": "xlg0722",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win portable"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.silogu.app",
+    "productName": "小龙果",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "package.json"
+    ],
+    "extraResources": [
+      { "from": "../网站", "to": "网站" }
+    ],
+    "win": {
+      "target": "portable",
+      "signAndEditExecutable": false
+    },
+    "portable": {
+      "artifactName": "siloguApp.exe"
+    }
+  }
+}

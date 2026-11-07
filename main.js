@@ -1,1 +1,154 @@
-{"output":"1\t/**\n2\t * Electron 主进程：创建窗口，加载共享的「网站」UI，\n3\t * 提供下载目录管理 + 原生下载（含进度回传）。\n4\t */\n5\tconst { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');\n6\tconst path = require('path');\n7\tconst fs = require('fs');\n8\t\n9\t// 下载目录配置保存在 userData（随系统用户走，不污染项目目录）\n10\tfunction configPath() {\n11\t    return path.join(app.getPath('userData'), 'silogu-config.json');\n12\t}\n13\t\n14\tfunction readConfig() {\n15\t    try {\n16\t        return JSON.parse(fs.readFileSync(configPath(), 'utf8'));\n17\t    } catch (err) {\n18\t        return {};\n19\t    }\n20\t}\n21\t\n22\tfunction writeConfig(cfg) {\n23\t    try {\n24\t        fs.writeFileSync(configPath(), JSON.stringify(cfg, null, 2), 'utf8');\n25\t    } catch (err) {\n26\t        // 配置目录不可写时不致命，退回到默认下载目录\n27\t    }\n28\t}\n29\t\n30\tfunction defaultDownloadDir() {\n31\t    return app.getPath('downloads');\n32\t}\n33\t\n34\tfunction getDownloadDir() {\n35\t    const cfg = readConfig();\n36\t    return cfg.downloadDir || defaultDownloadDir();\n37\t}\n38\t\n39\tfunction createWindow() {\n40\t    const win = new BrowserWindow({\n41\t        width: 1280,\n42\t        height: 820,\n43\t        minWidth: 960,\n44\t        minHeight: 640,\n45\t        backgroundColor: '#0a0e1a',\n46\t        title: '小龙果',\n47\t        autoHideMenuBar: true,\n48\t        show: false,\n49\t        webPreferences: {\n50\t            preload: path.join(__dirname, 'preload.js'),\n51\t            contextIsolation: true,\n52\t            nodeIntegration: false,\n53\t            sandbox: false\n54\t        }\n55\t    });\n56\t\n57\t    // 加载和网页完全一致的 UI，保证「网页和应用统一」\n58\t    // 开发环境：应用/../网站/index.html；打包后：resources/网站/index.html\n59\t    const entry = app.isPackaged\n60\t        ? path.join(process.resourcesPath, '网站', 'index.html')\n61\t        : path.join(__dirname, '..', '网站', 'index.html');\n62\t    win.loadFile(entry);\n63\t\n64\t    // 窗口加载完成后再显示，避免白屏闪烁\n65\t    win.once('ready-to-show', function () {\n66\t        win.show();\n67\t    });\n68\t\n69\t    // 外部链接交给系统浏览器，不在应用内跳转\n70\t    win.webContents.setWindowOpenHandler(function (detail) {\n71\t        if (detail.url && /^https?:/i.test(detail.url)) {\n72\t            shell.openExternal(detail.url);\n73\t        }\n74\t        return { action: 'deny' };\n75\t    });\n76\t}\n77\t\n78\tapp.whenReady().then(function () {\n79\t    // 读取当前下载目录\n80\t    ipcMain.handle('get-download-dir', function () {\n81\t        return getDownloadDir();\n82\t    });\n83\t\n84\t    // 弹出系统目录选择框\n85\t    ipcMain.handle('choose-download-dir', async function (event) {\n86\t        const win = BrowserWindow.fromWebContents(event.sender);\n87\t        const result = await dialog.showOpenDialog(win, {\n88\t            title: '选择下载目录',\n89\t            properties: ['openDirectory', 'createDirectory']\n90\t        });\n91\t        if (result.canceled || !result.filePaths || !result.filePaths.length) {\n92\t            throw new Error('cancelled');\n93\t        }\n94\t        const dir = result.filePaths[0];\n95\t        const cfg = readConfig();\n96\t        cfg.downloadDir = dir;\n97\t        writeConfig(cfg);\n98\t        return dir;\n99\t    });\n100\t\n101\t    // 原生下载：交 Electron 下载到设定目录，并把进度 / 结果回传给页面的进度条\n102\t    ipcMain.handle('download-file', function (event, payload) {\n103\t        const url = payload && payload.url;\n104\t        const filename = (payload && payload.filename) || 'download';\n105\t        const dir = getDownloadDir();\n106\t        const win = BrowserWindow.fromWebContents(event.sender);\n107\t        const ses = win.webContents.session;\n108\t\n109\t        return new Promise(function (resolve, reject) {\n110\t            // 先挂监听，再触发下载，避免漏掉 will-download 事件\n111\t            ses.once('will-download', function (evt, item) {\n112\t                item.setSavePath(path.join(dir, filename));\n113\t\n114\t                item.on('updated', function (e, state) {\n115\t                    if (state === 'interrupted') {\n116\t                        win.webContents.send('download-error', { message: '下载被中断' });\n117\t                        reject(new Error('下载被中断'));\n118\t                    } else if (state === 'progressing') {\n119\t                        win.webContents.send('download-progress', {\n120\t                            received: item.getReceivedBytes(),\n121\t                            total: item.getTotalBytes()\n122\t                        });\n123\t                    }\n124\t                });\n125\t\n126\t                item.once('done', function (e, state) {\n127\t                    if (state === 'completed') {\n128\t                        const finalPath = item.getSavePath();\n129\t                        win.webContents.send('download-done', { path: finalPath });\n130\t                        resolve({ path: finalPath });\n131\t                    } else if (state === 'cancelled') {\n132\t                        win.webContents.send('download-error', { message: '下载已取消' });\n133\t                        reject(new Error('下载已取消'));\n134\t                    } else {\n135\t                        win.webContents.send('download-error', { message: '下载失败：' + state });\n136\t                        reject(new Error('下载失败：' + state));\n137\t                    }\n138\t                });\n139\t            });\n140\t\n141\t            win.webContents.downloadURL(url);\n142\t        });\n143\t    });\n144\t\n145\t    createWindow();\n146\t\n147\t    app.on('activate', function () {\n148\t        if (BrowserWindow.getAllWindows().length === 0) createWindow();\n149\t    });\n150\t});\n151\t\n152\tapp.on('window-all-closed', function () {\n153\t    if (process.platform !== 'darwin') app.quit();\n154\t});"}
+/**
+ * Electron 主进程：创建窗口，加载共享的「网站」UI，
+ * 提供下载目录管理 + 原生下载（含进度回传）。
+ */
+const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const path = require('path');
+const fs = require('fs');
+
+// 下载目录配置保存在 userData（随系统用户走，不污染项目目录）
+function configPath() {
+    return path.join(app.getPath('userData'), 'silogu-config.json');
+}
+
+function readConfig() {
+    try {
+        return JSON.parse(fs.readFileSync(configPath(), 'utf8'));
+    } catch (err) {
+        return {};
+    }
+}
+
+function writeConfig(cfg) {
+    try {
+        fs.writeFileSync(configPath(), JSON.stringify(cfg, null, 2), 'utf8');
+    } catch (err) {
+        // 配置目录不可写时不致命，退回到默认下载目录
+    }
+}
+
+function defaultDownloadDir() {
+    return app.getPath('downloads');
+}
+
+function getDownloadDir() {
+    const cfg = readConfig();
+    return cfg.downloadDir || defaultDownloadDir();
+}
+
+function createWindow() {
+    const win = new BrowserWindow({
+        width: 1280,
+        height: 820,
+        minWidth: 960,
+        minHeight: 640,
+        backgroundColor: '#0a0e1a',
+        title: '小龙果',
+        autoHideMenuBar: true,
+        show: false,
+        webPreferences: {
+            preload: path.join(__dirname, 'preload.js'),
+            contextIsolation: true,
+            nodeIntegration: false,
+            sandbox: false
+        }
+    });
+
+    // 加载和网页完全一致的 UI，保证「网页和应用统一」
+    // 开发环境：应用/../网站/index.html；打包后：resources/网站/index.html
+    const entry = app.isPackaged
+        ? path.join(process.resourcesPath, '网站', 'index.html')
+        : path.join(__dirname, '..', '网站', 'index.html');
+    win.loadFile(entry);
+
+    // 窗口加载完成后再显示，避免白屏闪烁
+    win.once('ready-to-show', function () {
+        win.show();
+    });
+
+    // 外部链接交给系统浏览器，不在应用内跳转
+    win.webContents.setWindowOpenHandler(function (detail) {
+        if (detail.url && /^https?:/i.test(detail.url)) {
+            shell.openExternal(detail.url);
+        }
+        return { action: 'deny' };
+    });
+}
+
+app.whenReady().then(function () {
+    // 读取当前下载目录
+    ipcMain.handle('get-download-dir', function () {
+        return getDownloadDir();
+    });
+
+    // 弹出系统目录选择框
+    ipcMain.handle('choose-download-dir', async function (event) {
+        const win = BrowserWindow.fromWebContents(event.sender);
+        const result = await dialog.showOpenDialog(win, {
+            title: '选择下载目录',
+            properties: ['openDirectory', 'createDirectory']
+        });
+        if (result.canceled || !result.filePaths || !result.filePaths.length) {
+            throw new Error('cancelled');
+        }
+        const dir = result.filePaths[0];
+        const cfg = readConfig();
+        cfg.downloadDir = dir;
+        writeConfig(cfg);
+        return dir;
+    });
+
+    // 原生下载：交 Electron 下载到设定目录，并把进度 / 结果回传给页面的进度条
+    ipcMain.handle('download-file', function (event, payload) {
+        const url = payload && payload.url;
+        const filename = (payload && payload.filename) || 'download';
+        const dir = getDownloadDir();
+        const win = BrowserWindow.fromWebContents(event.sender);
+        const ses = win.webContents.session;
+
+        return new Promise(function (resolve, reject) {
+            // 先挂监听，再触发下载，避免漏掉 will-download 事件
+            ses.once('will-download', function (evt, item) {
+                item.setSavePath(path.join(dir, filename));
+
+                item.on('updated', function (e, state) {
+                    if (state === 'interrupted') {
+                        win.webContents.send('download-error', { message: '下载被中断' });
+                        reject(new Error('下载被中断'));
+                    } else if (state === 'progressing') {
+                        win.webContents.send('download-progress', {
+                            received: item.getReceivedBytes(),
+                            total: item.getTotalBytes()
+                        });
+                    }
+                });
+
+                item.once('done', function (e, state) {
+                    if (state === 'completed') {
+                        const finalPath = item.getSavePath();
+                        win.webContents.send('download-done', { path: finalPath });
+                        resolve({ path: finalPath });
+                    } else if (state === 'cancelled') {
+                        win.webContents.send('download-error', { message: '下载已取消' });
+                        reject(new Error('下载已取消'));
+                    } else {
+                        win.webContents.send('download-error', { message: '下载失败：' + state });
+                        reject(new Error('下载失败：' + state));
+                    }
+                });
+            });
+
+            win.webContents.downloadURL(url);
+        });
+    });
+
+    createWindow();
+
+    app.on('activate', function () {
+        if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    });
+});
+
+app.on('window-all-closed', function () {
+    if (process.platform !== 'darwin') app.quit();
+});
