@@ -1,1 +1,44 @@
-{"output":"1\t{\n2\t  \"name\": \"silogu-app\",\n3\t  \"version\": \"1.0.3\",\n4\t  \"description\": \"小龙果桌面应用（加载共享网站 UI，提供原生下载与增量更新）\",\n5\t  \"author\": \"xlg0722\",\n6\t  \"main\": \"main.js\",\n7\t  \"scripts\": {\n8\t    \"start\": \"electron .\",\n9\t    \"dist\": \"electron-builder --win --dir && node scripts/build-update-manifest.js\",\n10\t    \"manifest\": \"node scripts/build-update-manifest.js\"\n11\t  },\n12\t  \"devDependencies\": {\n13\t    \"electron\": \"^33.0.0\",\n14\t    \"electron-builder\": \"^25.1.8\"\n15\t  },\n16\t  \"build\": {\n17\t    \"appId\": \"com.silogu.app\",\n18\t    \"productName\": \"小龙果\",\n19\t    \"asar\": false,\n20\t    \"directories\": {\n21\t      \"output\": \"dist\"\n22\t    },\n23\t    \"files\": [\n24\t      \"main.js\",\n25\t      \"preload.js\",\n26\t      \"package.json\"\n27\t    ],\n28\t    \"extraResources\": [\n29\t      {\n30\t        \"from\": \"../网站\",\n31\t        \"to\": \"网站\",\n32\t        \"filter\": [\"**/*\", \"!.github/**\", \"!scripts/**\"]\n33\t      },\n34\t      {\n35\t        \"from\": \"assets/icon.ico\",\n36\t        \"to\": \"icon.ico\"\n37\t      }\n38\t    ],\n39\t    \"win\": {\n40\t      \"target\": \"dir\",\n41\t      \"icon\": \"assets/icon.ico\"\n42\t    }\n43\t  }\n44\t}"}
+{
+  "name": "silogu-app",
+  "version": "1.0.3",
+  "description": "小龙果桌面应用（加载共享网站 UI，提供原生下载与增量更新）",
+  "author": "xlg0722",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --dir && node scripts/build-update-manifest.js",
+    "manifest": "node scripts/build-update-manifest.js"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.silogu.app",
+    "productName": "小龙果",
+    "asar": false,
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../网站",
+        "to": "网站",
+        "filter": ["**/*", "!.github/**", "!scripts/**"]
+      },
+      {
+        "from": "assets/icon.ico",
+        "to": "icon.ico"
+      }
+    ],
+    "win": {
+      "target": "dir",
+      "icon": "assets/icon.ico"
+    }
+  }
+}
