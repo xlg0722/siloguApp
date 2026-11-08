@@ -1,5 +1,5 @@
 {
-  "version": "1.0.3",
+  "version": "1.0.4",
   "electron": "33.4.11",
   "notes": "增量更新：只下载修改过的文件",
   "installer": "https://gitee.com/silogu/silogu-app/releases",
@@ -62,7 +62,7 @@
     {
       "target": "resources/网站/styles.css",
       "url": "https://raw.githubusercontent.com/xlg0722/siloguWebsite/main/styles.css",
-      "sha256": "bc94403dac45418f3ebb9d5081b30868f0393a3ffac38c8e5ac5d19d35d9d879"
+      "sha256": "8c962a5a071159b7e73063f0e00d436f608a037272e80058ceaf654f7c1f11cf"
     },
     {
       "target": "resources/网站/supabase-config.js",
